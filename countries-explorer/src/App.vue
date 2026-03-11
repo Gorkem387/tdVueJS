@@ -25,6 +25,15 @@ const removeFromVisited = (country) => {
   visitedCountries.value = visitedCountries.value.filter(c => c.cca3 !== country.cca3);
 };
 
+const toggleVisited = (country) => {
+  const exists = visitedCountries.value.find(c => c.cca3 === country.cca3);
+  if (exists) {
+    removeFromVisited(country);
+  } else {
+    addToVisited(country);
+  }
+};
+
 const totalCountries = computed(() => countries.value.length);
 const totalPopulation = computed(() => {
   return countries.value.reduce((sum, country) => sum + country.population, 0);
@@ -80,7 +89,9 @@ onMounted(fetchCountries);
   <div v-if="selectedCountry">
     <CountryDetails 
       :country="selectedCountry" 
-      @close="closeDetails" 
+      :isVisited="!!visitedCountries.find(c => c.cca3 === selectedCountry.cca3)"
+      @close="closeDetails"
+      @toggle-visited="toggleVisited"
     />
   </div>
 
@@ -106,7 +117,7 @@ onMounted(fetchCountries);
     </header>
     
     <VisitedCountries 
-      :visited-list="visitedCountries" 
+      :countries="visitedCountries" 
       @remove="removeFromVisited" 
     />
 
@@ -124,6 +135,7 @@ onMounted(fetchCountries);
             :country="country"
             @show-details="openDetails"
             @add-visited="addToVisited"
+            @toggle-visited="toggleVisited"
             />
         </div>
       </div>

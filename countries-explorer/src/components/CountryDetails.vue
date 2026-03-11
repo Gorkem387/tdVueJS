@@ -46,8 +46,6 @@ defineEmits(['close', 'toggle-visited']);
   gap: 40px;
   background: white;
   padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .large-flag {

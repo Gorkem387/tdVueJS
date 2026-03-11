@@ -10,7 +10,6 @@
       <h3>{{ country.name.common }}</h3>
       <div class="card-actions">
         <button @click="$emit('show-details', country)" class="detail-btn">Détails</button>
-        <button @click="$emit('add-visited', country)" class="visit-btn">Visité</button>
       </div>
     </div>
   </div>

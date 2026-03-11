@@ -31,9 +31,9 @@ defineEmits(['remove']);
 <style scoped>
 .visited-view {
   padding: 20px;
-  background: white;
-  border-radius: 12px;
+  background: rgba(196, 246, 171, 0.638);
   margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .empty-msg {
