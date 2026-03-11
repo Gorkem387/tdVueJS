@@ -1,29 +1,38 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import CountryCard from '../components/CountryCard.vue';
 import SearchBar from '../components/SearchBar.vue';
 import RegionFilter from '../components/RegionFilter.vue';
 import CountryDetails from '../components/CountryDetails.vue';
 import StatsCard from '../components/StatsCard.vue';
-import { visited, addVisited, toggleVisited } from '../composables/useVisited';
 
-const countries = ref([]);
-const isLoading = ref(true);
+import { visited, addVisited, toggleVisited } from '../composables/useVisited';
+import { useFetch } from '@/composables/UseFetch';
+
+const url = "https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,languages,currencies,borders,flag,cca3";
+
+const { data: countries, loading: isLoading, error } = useFetch(url);
+
 const searchQuery = ref("");
 const selectedRegion = ref("");
 const resetKey = ref(0);
 const selectedCountry = ref(null);
 
-const totalCountries = computed(() => countries.value.length);
+const totalCountries = computed(() => countries.value?.length || 0);
+
 const totalPopulation = computed(() => {
+  if (!countries.value) return 0;
   return countries.value.reduce((sum, country) => sum + country.population, 0);
 });
+
 const topCountry = computed(() => {
-  if (countries.value.length === 0) return null;
+  if (!countries.value || countries.value.length === 0) return null;
   return [...countries.value].sort((a, b) => b.population - a.population)[0];
 });
 
 const filteredCountries = computed(() => {
+  if (!countries.value) return [];
+  
   return countries.value.filter(country => {
     const matchesSearch = country.name.common
       .toLowerCase()
@@ -35,18 +44,6 @@ const filteredCountries = computed(() => {
     return matchesSearch && matchesRegion;
   });
 });
-
-const fetchCountries = async () => {
-  try {
-    isLoading.value = true;
-    const response = await fetch("https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,languages,currencies,borders,flag,cca3");
-    countries.value = await response.json();
-  } catch (error) {
-    console.error("Erreur :", error);
-  } finally {
-    isLoading.value = false;
-  }
-};
 
 const resetFilters = () => {
   searchQuery.value = "";
@@ -61,15 +58,17 @@ const openDetails = (country) => {
 const closeDetails = () => {
   selectedCountry.value = null;
 };
-
-onMounted(fetchCountries);
 </script>
 
 <template>
+  <div v-if="error" class="error-msg">
+    Erreur lors du chargement : {{ error }}
+  </div>
+
   <div v-if="selectedCountry">
     <CountryDetails 
       :country="selectedCountry" 
-      :isVisited="!!visited.find(c => c.cca3 === selectedCountry.cca3)"
+      :isVisited="!!visited.value.find(c => c.cca3 === selectedCountry.cca3)"
       @close="closeDetails"
       @toggle-visited="toggleVisited"
     />
@@ -77,10 +76,9 @@ onMounted(fetchCountries);
 
   <div v-else>
     <header class="header-controls">
-      <div class="stats-container" v-if="!isLoading">
+      <div class="stats-container" v-if="!isLoading && countries">
         <StatsCard title="Total Pays" :value="totalCountries" />
-        <StatsCard title="Population Mondiale" :value="totalPopulation.toLocaleString()">
-        </StatsCard>
+        <StatsCard title="Population Mondiale" :value="totalPopulation.toLocaleString()" />
         <StatsCard 
           v-if="topCountry"
           title="Plus peuplé" 
@@ -106,7 +104,7 @@ onMounted(fetchCountries);
         <div class="countries-grid">
           <CountryCard 
             v-for="country in filteredCountries" 
-            :key="country.name.common" 
+            :key="country.cca3" 
             :country="country"
             @show-details="openDetails"
             @add-visited="addVisited"
