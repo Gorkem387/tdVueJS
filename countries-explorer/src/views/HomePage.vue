@@ -6,12 +6,14 @@ import RegionFilter from '../components/RegionFilter.vue';
 import CountryDetails from '../components/CountryDetails.vue';
 import StatsCard from '../components/StatsCard.vue';
 
-import { visited, addVisited, toggleVisited } from '../composables/useVisited';
+import { useVisited } from '@/composables/useVisited';
 import { useFetch } from '@/composables/UseFetch';
 
 const url = "https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,languages,currencies,borders,flag,cca3";
 
 const { data: countries, loading: isLoading, error } = useFetch(url);
+
+const { visited, addVisited, toggleVisited } = useVisited();
 
 const searchQuery = ref("");
 const selectedRegion = ref("");
@@ -94,9 +96,7 @@ const closeDetails = () => {
       </div>
     </header>
 
-    <main id="app">
-      <h1>Explorateur de Pays</h1>
-      
+    <main id="app">   
       <div v-if="isLoading" class="loader">Chargement des pays...</div>
       
       <div v-else>

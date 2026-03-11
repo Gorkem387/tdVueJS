@@ -17,9 +17,8 @@ const routes = [
     },
     { 
         path: '/country/:code', 
-        name: 'Details', 
-        component: CountryDetails, 
-        props: true
+        name: 'CountryDetails', 
+        component: () => import('./views/CountryPage.vue'),
     }
 ]
 

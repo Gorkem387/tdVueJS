@@ -1,5 +1,6 @@
 <script setup>
-import { visited, removeVisited } from '../composables/useVisited';
+import { useVisited } from '../composables/useVisited';
+const { visited, removeVisited } = useVisited();
 </script>
 
 <template>
