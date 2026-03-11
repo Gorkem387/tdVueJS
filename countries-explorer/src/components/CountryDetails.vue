@@ -1,36 +1,95 @@
 <script setup>
-defineProps(['country', 'isVisited']);
-defineEmits(['close', 'toggle-visited']);
+import { ref, watch, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { visited, toggleVisited } from '../composables/useVisited';
+
+const props = defineProps({
+  country: { type: Object, default: null },
+  isVisited: { type: Boolean, default: false },
+  code: { type: String, default: null }
+});
+
+const emit = defineEmits(['close', 'toggle-visited']);
+
+const router = useRouter();
+const countryData = ref(props.country);
+const loading = ref(false);
+
+const fetchByCode = async (code) => {
+  try {
+    loading.value = true;
+    const res = await fetch(`https://restcountries.com/v3.1/alpha/${code}?fields=name,flags,population,region,capital,languages,currencies,borders,flag,cca3`);
+    const json = await res.json();
+    countryData.value = Array.isArray(json) ? json[0] : json;
+  } catch (e) {
+    console.error('Failed to fetch country by code', e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+watch(() => props.code, (c) => {
+  if (c) fetchByCode(c);
+});
+
+onMounted(() => {
+  if (props.code && !props.country) {
+    fetchByCode(props.code);
+  }
+});
+
+const handleClose = () => {
+  if (props.code) {
+    router.push('/');
+  } else {
+    emit('close');
+  }
+};
+
+const isVisitedComputed = computed(() => {
+  if (props.isVisited) return true;
+  if (!countryData.value) return false;
+  return !!visited.value.find(c => c.cca3 === countryData.value.cca3);
+});
+
+const handleToggleVisited = () => {
+  if (!countryData.value) return;
+  toggleVisited(countryData.value);
+  emit('toggle-visited', countryData.value);
+};
 </script>
 
 <template>
-  <div class="country-details">
-    <button @click="$emit('close')" class="close-btn">← Retour à la liste</button>
+  <div class="country-details" v-if="!loading && countryData">
+    <button @click="handleClose" class="close-btn">← Retour à la liste</button>
 
     <div class="details-content">
-      <img :src="country.flags.svg" alt="Drapeau" class="large-flag">
+      <img :src="countryData.flags.svg" alt="Drapeau" class="large-flag">
 
       <div class="text-info">
-        <h2>{{ country.name.official }}</h2>
+        <h2>{{ countryData.name.official }}</h2>
 
         <div class="visited-checkbox-area">
           <label class="checkbox-label">
-            <input type="checkbox" :checked="isVisited" @change="$emit('toggle-visited', country)">
+            <input type="checkbox" :checked="isVisitedComputed" @change="handleToggleVisited">
             Marquer comme "Pays visité"
           </label>
         </div>
 
         <div class="info-grid">
-          <p><strong>Capitale :</strong> {{ country.capital?.[0] || 'N/A' }}</p>
-          <p><strong>Région :</strong> {{ country.region }}</p>
-          <p><strong>Population :</strong> {{ country.population.toLocaleString() }}</p>
-          <p><strong>Langues :</strong> {{ Object.values(country.languages || {}).join(', ') || 'N/A' }}</p>
-          <p><strong>Devises :</strong> {{Object.values(country.currencies || {}).map(c => c.name).join(', ') || 'N/A'
+          <p><strong>Capitale :</strong> {{ countryData.capital?.[0] || 'N/A' }}</p>
+          <p><strong>Région :</strong> {{ countryData.region }}</p>
+          <p><strong>Population :</strong> {{ countryData.population.toLocaleString() }}</p>
+          <p><strong>Langues :</strong> {{ Object.values(countryData.languages || {}).join(', ') || 'N/A' }}</p>
+          <p><strong>Devises :</strong> {{Object.values(countryData.currencies || {}).map(c => c.name).join(', ') || 'N/A'
             }}</p>
-          <p><strong>Frontières :</strong> {{ country.borders?.join(', ') || 'Aucune' }}</p>
+          <p><strong>Frontières :</strong> {{ countryData.borders?.join(', ') || 'Aucune' }}</p>
         </div>
       </div>
     </div>
+  </div>
+  <div v-else-if="loading" class="country-details">
+    <div class="loader">Chargement...</div>
   </div>
 </template>
 

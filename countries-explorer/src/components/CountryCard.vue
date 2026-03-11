@@ -9,7 +9,9 @@
     <div class="info">
       <h3>{{ country.name.common }}</h3>
       <div class="card-actions">
-        <button @click="$emit('show-details', country)" class="detail-btn">Détails</button>
+        <router-link :to="'/country/' + country.cca3" class="detail-btn">
+          Voir les détails
+        </router-link>
       </div>
     </div>
   </div>

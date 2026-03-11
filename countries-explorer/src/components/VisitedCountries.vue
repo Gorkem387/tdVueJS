@@ -1,28 +1,20 @@
 <script setup>
-
-defineProps({
-  countries: {
-    type: Array,
-    default: () => []
-  }
-});
-
-defineEmits(['remove']);
+import { visited, removeVisited } from '../composables/useVisited';
 </script>
 
 <template>
   <div class="visited-view">
     <h2>Mes pays visités</h2>
 
-    <div v-if="countries.length === 0" class="empty-msg">
+    <div v-if="visited.length === 0" class="empty-msg">
       Vous n'avez pas encore marqué de pays comme visité.
     </div>
 
     <div v-else class="list">
-      <div v-for="c in countries" :key="c.cca3" class="item">
+      <div v-for="c in visited" :key="c.cca3" class="item">
         <span class="flag-emoji">{{ c.flag }}</span>
         <span class="country-name">{{ c.name.common }}</span>
-        <button @click="$emit('remove', c)" class="remove-btn">Retirer</button>
+        <button @click="removeVisited(c)" class="remove-btn">Retirer</button>
       </div>
     </div>
   </div>
